@@ -59,3 +59,20 @@ Change these values before sharing or deploying the project. You can set `ADMIN_
 - `static/css/style.css` — styling
 - `static/js/dashboard.js` — charts
 - `tests/` — basic automated tests
+
+## Screenshots
+
+### Homepage
+![NexaMart homepage](screenshots/01-homepage.jpg)
+
+### Product Catalog
+![Product catalog](screenshots/02-product-catalog.jpg)
+
+### Registration Page
+![Registration page](screenshots/03-registration.jpg)
+
+### Admin Review Explorer
+![Admin review explorer](screenshots/04-admin-review-explorer.jpg)
+
+### Admin Sentiment Analytics
+![Admin analytics dashboard](screenshots/05-admin-analytics.jpg)

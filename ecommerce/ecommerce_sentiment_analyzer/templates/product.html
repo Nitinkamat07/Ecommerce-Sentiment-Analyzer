@@ -1,0 +1,201 @@
+
+{% extends "base.html" %}
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block content %}
+<section class="container page-space">
+
+  <div class="breadcrumb-line">
+    <a href="{{ url_for('index') }}">Shop</a> /
+    {{ product.category }} / {{ product.name }}
+  </div>
+
+  <div class="row g-5 product-detail-layout">
+
+    <div class="col-lg-6">
+      <div class="detail-image">
+
+        {% set name = product.name|lower %}
+
+        {% if 'smartphone' in name %}
+          {% set image = '/static/img/products/smartphone.png' %}
+
+        {% elif 'headphones' in name %}
+          {% set image = 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1000&q=85' %}
+
+        {% elif 'watch' in name %}
+          {% set image = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1000&q=85' %}
+
+        {% elif 'backpack' in name %}
+          {% set image = '/static/img/products/backpack.jpg' %}
+
+        {% elif 'keyboard' in name %}
+          {% set image = 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=1000&q=85' %}
+
+        {% elif 'coffee' in name %}
+          {% set image = 'https://www.wonderchef.com/cdn/shop/files/6809756.jpg?v=1757415602' %}
+
+        {% else %}
+          {% set image = product.image_url %}
+        {% endif %}
+
+        <img
+          src="{{ image }}"
+          alt="{{ product.name }}"
+          class="product-detail-photo"
+          onerror="this.onerror=null;this.src='{{ product.image_url }}';"
+        >
+
+        <span class="detail-image-label">NEXAMART PICK</span>
+      </div>
+    </div>
+
+    <div class="col-lg-6 detail-copy">
+
+      <div class="eyebrow muted-eyebrow">
+        {{ product.category|upper }}
+      </div>
+
+      <h1>{{ product.name }}</h1>
+
+      <div class="detail-rating">
+        <span>★</span>
+        {{ product.average_rating if product.reviews else "New" }}
+        <small>({{ product.reviews|length }} customer reviews)</small>
+      </div>
+
+      <div class="detail-price">
+        ₹{{ "{:,.2f}".format(product.price) }}
+      </div>
+
+      <p class="detail-description">{{ product.description }}</p>
+
+      <p class="stock-note">
+        <span class="stock-dot"></span>
+        {{ product.stock }} in stock
+      </p>
+
+      <form action="{{ url_for('add_to_cart', product_id=product.id) }}" method="post">
+        <button class="btn btn-primary btn-lg rounded-pill w-100">
+          Add to bag — ₹{{ "{:,.0f}".format(product.price) }}
+        </button>
+      </form>
+
+      <div class="detail-perks">
+        <span>✓ Secure account</span>
+        <span>✓ Demo checkout</span>
+        <span>✓ Customer insights</span>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="review-section">
+
+    <div class="section-heading">
+      <div>
+        <div class="eyebrow muted-eyebrow">CUSTOMER VOICES</div>
+        <h2>Reviews & sentiment</h2>
+        <p>AI labels are predictions and may not always reflect the review perfectly.</p>
+      </div>
+    </div>
+
+    <div class="sentiment-summary">
+      {% for label, color in [('Positive','positive'),('Neutral','neutral'),('Negative','negative')] %}
+        <div class="sentiment-mini {{ color }}">
+          <span>{{ label }}</span>
+          <strong>{{ counts[label] }}</strong>
+          <small>
+            {% if product.reviews %}
+              {{ (counts[label] * 100 / product.reviews|length)|round(1) }}%
+            {% else %}
+              0%
+            {% endif %}
+          </small>
+        </div>
+      {% endfor %}
+    </div>
+
+    {% if current_user.is_authenticated and not current_user.is_admin %}
+
+      <div class="review-form-card">
+        <h3>{{ 'Edit your review' if existing_review else 'Share your experience' }}</h3>
+
+        {% if existing_review %}
+          <p>You have already reviewed this product. Update your rating or review below.</p>
+        {% else %}
+          <p>Your feedback helps other shoppers make informed choices.</p>
+        {% endif %}
+
+        <form method="post">
+          <label class="form-label" for="rating">Your rating</label>
+
+          <select class="form-select mb-3" id="rating" name="rating" required>
+            <option value="">Choose a rating</option>
+            <option value="5" {% if existing_review and existing_review.rating == 5 %}selected{% endif %}>★★★★★ — Excellent</option>
+            <option value="4" {% if existing_review and existing_review.rating == 4 %}selected{% endif %}>★★★★ — Good</option>
+            <option value="3" {% if existing_review and existing_review.rating == 3 %}selected{% endif %}>★★★ — Average</option>
+            <option value="2" {% if existing_review and existing_review.rating == 2 %}selected{% endif %}>★★ — Poor</option>
+            <option value="1" {% if existing_review and existing_review.rating == 1 %}selected{% endif %}>★ — Terrible</option>
+          </select>
+
+          <label class="form-label" for="body">Your review</label>
+
+          <textarea class="form-control mb-3" id="body" name="body"
+                    rows="4" minlength="5" maxlength="1200"
+                    placeholder="What did you like or dislike?"
+                    required>{{ existing_review.body if existing_review else '' }}</textarea>
+
+          <button class="btn btn-primary rounded-pill px-4">
+            {{ 'Update review & reanalyse' if existing_review else 'Submit review & analyse' }}
+          </button>
+        </form>
+      </div>
+
+    {% elif not current_user.is_authenticated %}
+
+      <div class="review-form-card">
+        <h3>Have something to share?</h3>
+        <p>Sign in to leave a product review. Sentiment is classified automatically.</p>
+        <a class="btn btn-primary rounded-pill px-4" href="{{ url_for('login') }}">
+          Sign in to review
+        </a>
+      </div>
+
+    {% endif %}
+
+    <div class="review-list">
+      {% for r in product.reviews|sort(attribute='created_at', reverse=true) %}
+
+        <article class="review-card">
+          <div class="review-avatar">{{ r.author.username[0]|upper }}</div>
+
+          <div class="review-content">
+            <div class="review-top">
+              <strong>{{ r.author.username }}</strong>
+              <span class="review-date">{{ r.created_at.strftime('%d %b %Y') }}</span>
+            </div>
+
+            <div class="review-stars">
+              {{ '★' * r.rating }}<span>{{ '☆' * (5-r.rating) }}</span>
+            </div>
+
+            <p>{{ r.body }}</p>
+
+            <div class="review-tags">
+              <span class="sentiment-pill {{ r.sentiment|lower }}">{{ r.sentiment }}</span>
+              {% if r.aspects %}
+                <span class="aspect-label">Topics: {{ r.aspects }}</span>
+              {% endif %}
+            </div>
+          </div>
+        </article>
+
+      {% else %}
+        <div class="empty-inline">No reviews yet. Be the first to share your experience.</div>
+      {% endfor %}
+    </div>
+
+  </div>
+</section>
+{% endblock %}

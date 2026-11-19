@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Review analytics{% endblock %}
+{% block content %}
+<section class="container page-space admin-page">
+<div class="admin-heading"><div><div class="eyebrow muted-eyebrow">INSIGHT STUDIO / ADMIN</div><h1 class="page-title">Customer sentiment.</h1><p class="page-subtitle">A clearer view of what shoppers are saying.</p></div><form method="post" action="{{ url_for('reanalyze_reviews') }}"><button class="btn btn-outline-dark rounded-pill">↻ Re-analyse reviews</button></form></div>
+<div class="metric-grid"><div class="metric-card"><span>Registered users</span><strong>{{ user_count }}</strong><small>Customer accounts</small></div><div class="metric-card"><span>Products</span><strong>{{ product_count }}</strong><small>In the catalogue</small></div><div class="metric-card"><span>Total reviews</span><strong>{{ total }}</strong><small>Customer feedback entries</small></div><div class="metric-card metric-highlight"><span>Positive sentiment</span><strong>{{ percentages['Positive'] }}%</strong><small>{{ counts['Positive'] }} reviews classified positive</small></div></div>
+<div class="row g-4 dashboard-charts"><div class="col-lg-5"><div class="dashboard-card chart-card"><div class="card-heading"><div><h3>Sentiment overview</h3><p>Share of all submitted reviews</p></div></div><div class="donut-wrap"><canvas id="sentimentChart"></canvas><div class="donut-center"><strong>{{ total }}</strong><span>reviews</span></div></div><div class="legend-list"><div><span class="legend-dot pos"></span>Positive <strong>{{ percentages['Positive'] }}%</strong></div><div><span class="legend-dot neu"></span>Neutral <strong>{{ percentages['Neutral'] }}%</strong></div><div><span class="legend-dot neg"></span>Negative <strong>{{ percentages['Negative'] }}%</strong></div></div></div></div>
+<div class="col-lg-7"><div class="dashboard-card chart-card"><div class="card-heading"><div><h3>Product comparison</h3><p>Number of reviews by sentiment</p></div></div><div class="bar-chart-wrap"><canvas id="productChart"></canvas></div></div></div></div>
+<div class="row g-4 mt-1"><div class="col-lg-5"><div class="dashboard-card"><div class="card-heading"><div><h3>Products to watch</h3><p>Ranked by share of negative reviews</p></div></div>{% for item in negative_products %}<div class="watch-row"><div class="watch-icon">!</div><div class="watch-info"><strong>{{ item.product.name }}</strong><small>{{ item.negative }} negative of {{ item.total }} reviews</small><div class="progress"><div class="progress-bar bg-danger" style="width:{{ item.percent }}%"></div></div></div><strong>{{ item.percent }}%</strong></div>{% else %}<p class="empty-inline">No product reviews yet. Add customer reviews to populate this section.</p>{% endfor %}</div></div>
+<div class="col-lg-7"><div class="dashboard-card"><div class="card-heading"><div><h3>Aspect mentions</h3><p>Keyword-based topic hints from reviews</p></div></div><div class="aspect-cloud">{% set ns = namespace(aspects={}) %}{% for r in reviews %}{% for a in r.aspects.split(', ') if a %}{% if a in ns.aspects %}{% set _ = ns.aspects.update({a: ns.aspects[a]+1}) %}{% else %}{% set _ = ns.aspects.update({a: 1}) %}{% endif %}{% endfor %}{% endfor %}{% for a, count in ns.aspects|dictsort %}<span>{{ a }} <b>{{ count }}</b></span>{% else %}<p class="empty-inline">Aspect hints appear when reviews mention known topics such as battery, price or delivery.</p>{% endfor %}</div><p class="method-note">Aspect hints use keyword matching; they are not a trained aspect-level model.</p></div></div></div>
+<div class="dashboard-card review-table-card"><div class="card-heading table-heading"><div><h3>Review explorer</h3><p>Inspect the latest customer feedback</p></div><form class="review-filters" method="get"><select class="form-select form-select-sm" name="sentiment"><option value="">All sentiments</option>{% for s in ['Positive','Neutral','Negative'] %}<option value="{{ s }}" {% if sentiment_filter==s %}selected{% endif %}>{{ s }}</option>{% endfor %}</select><select class="form-select form-select-sm" name="product"><option value="">All products</option>{% for p in products %}<option value="{{ p.id }}" {% if product_filter==p.id %}selected{% endif %}>{{ p.name }}</option>{% endfor %}</select><button class="btn btn-dark btn-sm rounded-pill px-3">Filter</button></form></div>
+<div class="table-responsive"><table class="table align-middle review-table"><thead><tr><th>Customer / product</th><th>Review</th><th>Rating</th><th>Sentiment</th><th>Date</th></tr></thead><tbody>{% for r in reviews %}<tr><td><strong>{{ r.author.username }}</strong><small>{{ r.product.name }}</small></td><td class="review-text-cell">{{ r.body }}{% if r.aspects %}<small>Topics: {{ r.aspects }}</small>{% endif %}</td><td><span class="table-stars">{{ '★' * r.rating }}</span></td><td><span class="sentiment-pill {{ r.sentiment|lower }}">{{ r.sentiment }}</span></td><td class="date-cell">{{ r.created_at.strftime('%d %b %Y') }}</td></tr>{% else %}<tr><td colspan="5" class="text-center py-5 text-secondary">No reviews match these filters yet.</td></tr>{% endfor %}</tbody></table></div></div>
+<div class="admin-footnote">Sentiment labels are automated estimates, not definitive judgments. Review model behavior and limitations before making business decisions.</div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const sentimentData = {{ [counts['Positive'], counts['Neutral'], counts['Negative']]|tojson }};
+const productLabels = {{ chart_labels|tojson }};
+const productSentiments = {{ chart_values|tojson }};
+if (window.Chart) {
+  new Chart(document.getElementById('sentimentChart'), {
+    type: 'doughnut',
+    data: { labels: ['Positive', 'Neutral', 'Negative'], datasets: [{ data: sentimentData, backgroundColor: ['#2e8b72','#d8ad55','#d76b66'], borderWidth: 0, hoverOffset: 5 }] },
+    options: { responsive: true, maintainAspectRatio: false, cutout: '76%', plugins: { legend: { display: false } } }
+  });
+  new Chart(document.getElementById('productChart'), {
+    type: 'bar',
+    data: { labels: productLabels, datasets: [
+      { label: 'Positive', data: productSentiments.map(x => x.Positive || 0), backgroundColor: '#2e8b72', borderRadius: 4 },
+      { label: 'Neutral', data: productSentiments.map(x => x.Neutral || 0), backgroundColor: '#d8ad55', borderRadius: 4 },
+      { label: 'Negative', data: productSentiments.map(x => x.Negative || 0), backgroundColor: '#d76b66', borderRadius: 4 }
+    ]},
+    options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true, grid: { display: false }, ticks: { maxRotation: 35, minRotation: 0 } }, y: { stacked: true, beginAtZero: true, ticks: { precision: 0 }, grid: { color: '#edf0f2' } } }, plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 7 } } } }
+  });
+}
+</script>
+{% endblock %}

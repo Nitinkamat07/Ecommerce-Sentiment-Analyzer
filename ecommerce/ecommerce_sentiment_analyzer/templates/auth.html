@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Create account' if mode=='register' else 'Sign in' }}{% endblock %}
+{% block content %}
+<section class="auth-page"><div class="auth-art"><div class="auth-art-inner"><div class="auth-symbol">N</div><div class="eyebrow">A MORE THOUGHTFUL WAY TO SHOP</div><h2>Good choices<br>start with <em>good insight.</em></h2><p>Explore products and learn from the experiences of other customers.</p><div class="auth-decoration">✳</div></div></div>
+<div class="auth-form-side"><div class="auth-form-card"><div class="eyebrow muted-eyebrow">{{ 'GET STARTED' if mode=='register' else 'WELCOME BACK' }}</div><h1>{{ 'Create your account' if mode=='register' else 'Sign in to NexaMart' }}</h1><p class="auth-subtitle">{{ 'Join the community and share your product experiences.' if mode=='register' else 'Your next great find is just around the corner.' }}</p>
+<form method="post">
+{% if mode=='register' %}<label class="form-label">Username</label><input class="form-control mb-3" name="username" minlength="3" required autocomplete="username" placeholder="e.g. nitin_k"><label class="form-label">Email address</label><input class="form-control mb-3" name="email" type="email" required autocomplete="email" placeholder="you@example.com">{% else %}<label class="form-label">Username or email</label><input class="form-control mb-3" name="identity" required autocomplete="username" placeholder="Enter your username or email">{% endif %}
+<label class="form-label">Password</label><input class="form-control mb-4" name="password" type="password" minlength="8" required autocomplete="{{ 'new-password' if mode=='register' else 'current-password' }}" placeholder="{{ 'At least 8 characters' if mode=='register' else 'Your password' }}">
+<button class="btn btn-primary btn-lg rounded-pill w-100">{{ 'Create account' if mode=='register' else 'Sign in' }}</button></form>
+<div class="auth-switch">{% if mode=='register' %}Already have an account? <a href="{{ url_for('login') }}">Sign in</a>{% else %}New to NexaMart? <a href="{{ url_for('register') }}">Create an account</a>{% endif %}</div>
+{% if mode=='login' %}<div class="demo-hint"><strong>Project demo admin</strong><br>Email: admin@shopdemo.local<br>Password: Admin123!</div>{% endif %}
+</div></div></section>
+{% endblock %}

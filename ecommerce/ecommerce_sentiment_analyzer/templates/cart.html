@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Your bag{% endblock %}
+{% block content %}
+<section class="container page-space narrow-page"><div class="eyebrow muted-eyebrow">YOUR SELECTION</div><h1 class="page-title">Your shopping bag.</h1><p class="page-subtitle">The good stuff, all in one place.</p>
+{% if items %}<div class="cart-table">
+{% for item in items %}<div class="cart-row"><img src="{{ item.product.image_url }}" alt="{{ item.product.name }}" onerror="this.style.display='none'"><div class="cart-product"><a href="{{ url_for('product_detail', product_id=item.product.id) }}">{{ item.product.name }}</a><small>{{ item.product.category }}</small><strong>₹{{ "{:,.2f}".format(item.product.price) }}</strong></div><form method="post" action="{{ url_for('update_cart') }}" class="cart-quantity"><label for="qty_{{ item.product.id }}">Qty</label><input class="form-control" id="qty_{{ item.product.id }}" type="number" min="1" max="{{ item.product.stock }}" name="qty_{{ item.product.id }}" value="{{ item.quantity }}"><button class="btn btn-sm btn-outline-dark rounded-pill">Update</button></form><strong class="cart-subtotal">₹{{ "{:,.2f}".format(item.subtotal) }}</strong><form method="post" action="{{ url_for('remove_from_cart', product_id=item.product.id) }}"><button class="btn btn-sm btn-outline-danger rounded-pill" title="Remove">✕</button></form></div>{% endfor %}
+</div>
+<div class="cart-summary"><div class="d-flex justify-content-between"><span>Subtotal</span><strong>₹{{ "{:,.2f}".format(total) }}</strong></div><small>Demo checkout only. No payment is processed.</small><form action="{{ url_for('checkout') }}" method="post" class="mt-3"><button class="btn btn-primary btn-lg rounded-pill w-100">Place demo order</button></form><a class="continue-link" href="{{ url_for('index') }}">← Continue shopping</a></div>
+{% else %}<div class="empty-state"><div class="empty-icon">♡</div><h3>Your bag is waiting.</h3><p>Explore the collection and add something you love.</p><a href="{{ url_for('index') }}" class="btn btn-primary rounded-pill px-4">Browse products</a></div>{% endif %}
+</section>
+{% endblock %}

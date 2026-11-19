@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Shop smarter{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="container hero-inner">
+    <div class="hero-copy">
+      <div class="eyebrow"><span class="eyebrow-dot"></span> SHOPPING, MADE THOUGHTFUL</div>
+      <h1>Find your next<br><em>everyday favourite.</em></h1>
+      <p>Discover useful finds, explore honest customer feedback, and shop with a little more confidence.</p>
+      <a href="#products" class="btn btn-primary btn-lg rounded-pill px-4">Explore products <span class="ms-2">↘</span></a>
+      <div class="hero-note"><span>✦</span> Customer reviews, with AI-powered sentiment insights</div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-orbit orbit-one"></div><div class="hero-orbit orbit-two"></div>
+      <div class="hero-product-card"><div class="hero-product-image">✦</div><div class="hero-product-meta"><span>THE EVERYDAY EDIT</span><strong>Good things, thoughtfully picked.</strong></div></div>
+      <div class="floating-chip chip-top"><span class="chip-dot positive-dot"></span> Loved by customers</div>
+      <div class="floating-chip chip-bottom"><span class="chip-star">★</span> Real reviews. Clear insights.</div>
+    </div>
+  </div>
+</section>
+<section class="container section-space" id="products">
+  <div class="section-heading">
+    <div><div class="eyebrow muted-eyebrow">THE COLLECTION</div><h2>Find something good.</h2><p>Useful essentials, selected for everyday life.</p></div>
+    <span class="product-count">{{ products|length }} products</span>
+  </div>
+  <form class="filter-bar" method="get" action="{{ url_for('index') }}">
+    <div class="filter-search"><span>⌕</span><input name="q" value="{{ q }}" placeholder="What are you looking for?"></div>
+    <select class="form-select" name="category" aria-label="Category"><option value="">All categories</option>{% for c in categories %}<option value="{{ c }}" {% if category==c %}selected{% endif %}>{{ c }}</option>{% endfor %}</select>
+    <select class="form-select" name="sort" aria-label="Sort products"><option value="featured" {% if sort=='featured' %}selected{% endif %}>Featured</option><option value="price-low" {% if sort=='price-low' %}selected{% endif %}>Price: low to high</option><option value="price-high" {% if sort=='price-high' %}selected{% endif %}>Price: high to low</option><option value="rating" {% if sort=='rating' %}selected{% endif %}>Top rated</option></select>
+    <button class="btn btn-dark rounded-pill px-4">Apply</button>
+  </form>
+  <div class="row g-4 product-grid">
+    {% for p in products %}
+    <div class="col-12 col-sm-6 col-lg-4">
+      <article class="product-card">
+       {% set name = p.name|lower %}
+
+<a href="{{ url_for('product_detail', product_id=p.id) }}"
+   class="product-image-wrap">
+
+  {% if 'smartphone' in name %}
+    <img src="/static/img/products/smartphone.png" alt="{{ p.name }}" loading="lazy" style="width:100%;height:100%;object-fit:cover;object-position:center;">
+
+  {% elif 'headphones' in name %}
+    <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80" alt="{{ p.name }}">
+
+  {% elif 'watch' in name %}
+    <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=80" alt="{{ p.name }}">
+
+  {% elif 'backpack' in name %}
+    <img src="/static/img/products/backpack.jpg" alt="{{ p.name }}" loading="lazy" style="width:100%;height:100%;object-fit:cover;object-position:center;">
+
+  {% elif 'keyboard' in name %}
+    <img src="https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=800&q=80" alt="{{ p.name }}">
+
+{% elif 'coffee' in name %}
+  <img
+    src="https://www.wonderchef.com/cdn/shop/files/6809756.jpg?v=1757415602"
+    alt="{{ p.name }}"
+    loading="lazy"
+  >
+
+
+  {% else %}
+    <img src="{{ p.image_url }}" alt="{{ p.name }}"
+         loading="lazy"
+         style="width:100%;height:100%;object-fit:cover;object-position:center;">
+  {% endif %}
+
+  <span class="image-tag">{{ p.category }}</span>
+</a>
+        <div class="product-info">
+          <div class="product-category">{{ p.category }}</div>
+          <h3><a href="{{ url_for('product_detail', product_id=p.id) }}">{{ p.name }}</a></h3>
+          <div class="product-rating"><span>★</span> {% if p.reviews %}{{ p.average_rating }} <small>({{ p.reviews|length }} reviews)</small>{% else %}<small>No reviews yet</small>{% endif %}</div>
+          <div class="product-buy"><strong>₹{{ "{:,.0f}".format(p.price) }}</strong><form action="{{ url_for('add_to_cart', product_id=p.id) }}" method="post"><button class="add-btn" aria-label="Add {{ p.name }} to cart">+</button></form></div>
+        </div>
+      </article>
+    </div>
+    {% else %}<div class="empty-state"><div class="empty-icon">⌕</div><h3>No products found</h3><p>Try another search or category.</p><a href="{{ url_for('index') }}" class="btn btn-outline-dark rounded-pill">Clear filters</a></div>{% endfor %}
+  </div>
+</section>
+<section class="insight-band"><div class="container insight-inner"><div class="insight-icon">✳</div><div><div class="eyebrow">BEYOND THE STAR RATING</div><h2>Understand what customers really think.</h2><p>Reviews are automatically grouped into positive, neutral and negative sentiment to make feedback easier to explore.</p></div><a href="{{ url_for('register') }}" class="btn btn-light rounded-pill px-4">Join the community ↗</a></div></section>
+{% endblock %}
